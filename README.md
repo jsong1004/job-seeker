@@ -16,14 +16,14 @@ Job Seeker Lite is a Flask web application designed to help users search for job
 
 1.  **Clone the repository (if applicable):**
     ```bash
-    git clone <your-repository-url>
+    git clone https://github.com/jsong1004/job-seeker.git
     cd job-seeker
     ```
 
 2.  **Create a virtual environment (recommended):**
     ```bash
-    python3 -m venv venv
-    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+    python3 -m venv job-seeker-venv
+    source job-seeker-venv/bin/activate  # On Windows use `venv\Scripts\activate`
     ```
 
 3.  **Install dependencies:**
