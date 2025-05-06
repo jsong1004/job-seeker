@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Seeker Lite</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Add link to a sans-serif font if needed, e.g., Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Add library for sortable/filterable table later if desired (e.g., DataTables) -->
+</head>
+<body>
+    <header>
+        <h1>Job Seeker Lite</h1>
+    </header>
+
+    <main>
+        <form method="POST" action="/">
+            <div class="form-group">
+                <label for="job_title">Job Title:</label>
+                <input type="text" id="job_title" name="job_title" required>
+            </div>
+            <div class="form-group">
+                <label for="location">Location:</label>
+                <input type="text" id="location" name="location" required>
+            </div>
+            <button type="submit">Search Jobs</button>
+        </form>
+
+        <!-- Display Error Messages -->
+        {% if error %}
+            <div class="error-message" style="color: red; background-color: #ffebee; border: 1px solid red; padding: 10px; margin-bottom: 1rem; border-radius: 4px;">
+                <strong>Error:</strong> {{ error }}
+            </div>
+        {% endif %}
+
+        <div class="results-container">
+            <h2>Job Results</h2>
+            {% if jobs %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th>Title</th>
+                        <th>Location</th>
+                        <th>Summary</th>
+                        <th>Extensions</th> <!-- Added Extensions -->
+                        <!-- Add more columns if needed -->
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in jobs %}
+                    <tr>
+                        <!-- Use job.company_name now to match Supabase/dict key -->
+                        <td>{{ job.company_name }}</td>
+                        <td>{{ job.title }}</td>
+                        <td>{{ job.location }}</td>
+                        <td>{{ job.summary }}</td>
+                        <td>{{ job.extensions }}</td> <!-- Display Extensions -->
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+                 {% if not error %} <!-- Only show 'No jobs found' if there wasn't an error -->
+                 <p>No jobs found yet. Start your search!</p>
+                 {% endif %}
+            {% endif %}
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Job Seeker Lite</p>
+    </footer>
+
+    <!-- Add JavaScript for table sorting/filtering later -->
+    <!-- <script src="path/to/your/script.js"></script> -->
+</body>
+</html>

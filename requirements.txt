@@ -1,0 +1,7 @@
+Flask
+google-search-results
+google-generativeai
+supabase
+python-dotenv
+pandas
+openpyxl # Add this line
