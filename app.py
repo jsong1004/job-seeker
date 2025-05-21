@@ -2,22 +2,27 @@ from flask import Flask, render_template, request, jsonify
 import os
 # Import necessary libraries
 from serpapi import GoogleSearch
-import google.generativeai as genai
+from openai import OpenAI
 from supabase import create_client, Client
 from dotenv import load_dotenv
 import pandas as pd # Import pandas
 from datetime import datetime # Import datetime
 
-# Load environment variables from .env file
-load_dotenv()
+# Load environment variables from .env file only if not in a known cloud environment
+# K_SERVICE is set by Cloud Run. Add other indicators if needed for other platforms.
+if not os.getenv('K_SERVICE'):
+    load_dotenv()
+    print("Loaded environment variables from .env file for local development.")
+else:
+    print("Running in a cloud environment. Expecting environment variables to be set by the platform.")
 
 app = Flask(__name__)
 
 # Configure API keys from environment variables
 SERPAPI_API_KEY = os.getenv("SERPAPI_API_KEY")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-# Read the Gemini model name from .env, default to 'gemini-1.5-flash' if not set
-GEMINI_MODEL_NAME = os.getenv("GEMINI_MODEL", 'gemini-1.5-flash')
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "google/gemini-2.5-flash-preview-05-20")
+HTTP_REFERER = os.getenv("HTTP_REFERER", "http://localhost:5001")
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
@@ -26,7 +31,7 @@ EXCEL_FILE_PATH = 'job_applications.xlsx'
 
 # --- Input Validation ---
 # Basic check if keys are loaded (you might want more robust checks)
-if not all([SERPAPI_API_KEY, GEMINI_API_KEY, SUPABASE_URL, SUPABASE_KEY]):
+if not all([SERPAPI_API_KEY, OPENROUTER_API_KEY, SUPABASE_URL, SUPABASE_KEY]):
     print("Warning: One or more API keys or Supabase credentials are not set in the .env file.")
     # You could raise an error, use default values, or disable features
     # For now, we'll allow the app to run but API calls will likely fail
@@ -43,44 +48,48 @@ if SUPABASE_URL and SUPABASE_KEY:
 else:
      print("Supabase URL or Key not found. Skipping Supabase initialization.")
 
-
-# Configure Gemini
-# Ensure GEMINI_API_KEY is loaded before uncommenting
-model = None
-if GEMINI_API_KEY:
+# Initialize OpenRouter client
+client = None
+if OPENROUTER_API_KEY:
     try:
-        genai.configure(api_key=GEMINI_API_KEY)
-        # Consider adding error handling for model initialization
-        # Use the model name read from the environment variable
-        model = genai.GenerativeModel(GEMINI_MODEL_NAME)
-        print(f"Gemini model configured using: {GEMINI_MODEL_NAME}")
+        client = OpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=OPENROUTER_API_KEY,
+            default_headers={
+                "HTTP-Referer": HTTP_REFERER,
+                "X-Title": "Job Seeker Lite"  # Your site name
+            }
+        )
+        print(f"OpenRouter client initialized with model: {OPENROUTER_MODEL}")
     except Exception as e:
-        print(f"Error configuring Gemini with model {GEMINI_MODEL_NAME}: {e}")
+        print(f"Error initializing OpenRouter client: {e}")
 else:
-    print("Gemini API Key not found. Skipping Gemini configuration.")
-
+    print("OpenRouter API Key not found. Skipping OpenRouter configuration.")
 
 def summarize_description(description):
-    """Summarizes job description using Gemini API."""
-    if not model:
-        print("Gemini model not initialized. Skipping summarization.")
+    """Summarizes job description using OpenRouter API."""
+    if not client:
+        print("OpenRouter client not initialized. Skipping summarization.")
         return "Summarization unavailable."
     if not description:
         return "No description provided."
 
     prompt = f"Summarize the following job description in less than 50 words:\n\n{description}"
     try:
-        response = model.generate_content(prompt)
-        # Add more robust error handling based on Gemini API response structure
-        if response.parts:
-             summary = response.text
-             return summary.strip()
+        response = client.chat.completions.create(
+            model=OPENROUTER_MODEL,
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
+        )
+        if response.choices and len(response.choices) > 0:
+            summary = response.choices[0].message.content
+            return summary.strip()
         else:
-             # Handle cases where generation might fail or be blocked
-             print(f"Gemini Warning/Error: {response.prompt_feedback}")
-             return "Could not generate summary."
+            print("No response content received from OpenRouter")
+            return "Could not generate summary."
     except Exception as e:
-        print(f"Error calling Gemini API: {e}")
+        print(f"Error calling OpenRouter API: {e}")
         return "Error during summarization."
 
 # --- Function to Save Data to Excel ---
@@ -147,7 +156,7 @@ def index():
             processed_jobs = []
             for job in serpapi_jobs[:10]: # Limit results for now
                 description = job.get('description', '')
-                # --- Gemini Summarization ---
+                # --- OpenRouter Summarization ---
                 summary = summarize_description(description)
                 # --- Extract 'via' field ---
                 via_source = job.get('via', 'Unknown') # Get 'via' or default to 'Unknown'

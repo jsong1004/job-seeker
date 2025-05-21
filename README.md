@@ -2,13 +2,13 @@
 
 ## Description
 
-Job Seeker Lite is a Flask web application designed to help users search for job listings using the SerpApi Google Jobs search. It then uses the Gemini API to summarize job descriptions and stores the processed job data in a Supabase PostgreSQL database.
+Job Seeker Lite is a Flask web application designed to help users search for job listings using the SerpApi Google Jobs search. It then uses the OpenRouter API with Google's Gemini model to summarize job descriptions and stores the processed job data in a Supabase PostgreSQL database.
 
 ## Features
 
 -   Search for jobs based on title and location.
 -   View a list of job results with company name, title, location, and description.
--   Automatic summarization of job descriptions using Gemini AI.
+-   Automatic summarization of job descriptions using OpenRouter with Google's Gemini model.
 -   Storage of job details (company, title, location, description, summary, extensions, via, job_highlights) in a Supabase database.
 -   (Previously) Option to save job application tracking details to an Excel file (currently commented out).
 
@@ -35,14 +35,16 @@ Job Seeker Lite is a Flask web application designed to help users search for job
     Create a `.env` file in the project root directory and add the following variables with your actual API keys and credentials:
     ```env
     SERPAPI_API_KEY="YOUR_SERPAPI_API_KEY"
-    GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
-    GEMINI_MODEL="gemini-1.5-flash" # Or your preferred Gemini model
+    OPENROUTER_API_KEY="YOUR_OPENROUTER_API_KEY"
+    OPENROUTER_MODEL="google/gemini-2.5-flash-preview-05-20" # Or your preferred model
+    HTTP_REFERER="http://localhost:5001" # Your site URL for OpenRouter API
     SUPABASE_URL="YOUR_SUPABASE_PROJECT_URL"
     SUPABASE_KEY="YOUR_SUPABASE_ANON_KEY"
     ```
     -   `SERPAPI_API_KEY`: Your API key from [SerpApi](https://serpapi.com/).
-    -   `GEMINI_API_KEY`: Your API key for Google's Gemini from [Google AI Studio](https://aistudio.google.com/app/apikey).
-    -   `GEMINI_MODEL`: (Optional) The specific Gemini model to use (defaults to `gemini-1.5-flash`).
+    -   `OPENROUTER_API_KEY`: Your API key from [OpenRouter](https://openrouter.ai/).
+    -   `OPENROUTER_MODEL`: (Optional) The specific model to use through OpenRouter (defaults to `google/gemini-2.5-flash-preview-05-20`).
+    -   `HTTP_REFERER`: (Optional) Your site URL for OpenRouter API (defaults to `http://localhost:5001` for local development).
     -   `SUPABASE_URL`: Your Supabase project URL.
     -   `SUPABASE_KEY`: Your Supabase project's `anon` (public) key.
 
@@ -107,7 +109,7 @@ Job Seeker Lite is a Flask web application designed to help users search for job
 
 -   **Backend:** Python, Flask
 -   **Job Search:** SerpApi (Google Jobs Engine)
--   **AI Summarization:** Google Gemini API
+-   **AI Summarization:** OpenRouter with Google's Gemini model
 -   **Database:** Supabase (PostgreSQL)
 -   **Environment Management:** python-dotenv
 -   **Data Handling (for Excel, if re-enabled):** Pandas, openpyxl

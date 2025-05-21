@@ -4,4 +4,6 @@ google-generativeai
 supabase
 python-dotenv
 pandas
-openpyxl # Add this line
+openpyxl
+gunicorn
+openai
